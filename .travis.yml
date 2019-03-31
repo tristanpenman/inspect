@@ -1,0 +1,21 @@
+language: cpp
+
+compiler:
+  - clang
+  - gcc
+
+before_install:
+  - sudo apt-get update -qq
+
+install:
+  - sudo apt-get install ragel lemon
+
+before_script:
+  - mkdir -p build
+
+script:
+  - pushd build
+  - cmake ..
+  - make
+  - ./inspect_tests
+  - popd
