@@ -13,13 +13,18 @@ Build dependencies (these can be installed using a package manager such as 'apt'
 - [Ragel state machine compiler](http://www.complang.org/ragel/)
 - [Lemon parser generator](https://www.sqlite.org/lemon.html)
 
-Vendored:
+Third-party libraries:
 
 - [googletest](https://code.google.com/p/googletest/) (for unit tests only, included in 'vendor' directory)
 
 ## Build
 
-Inspect can be built using CMake. The recommended approach is to create a build directory, and to run 'cmake' from there. For example:
+Clone the repo, including submodules (googletest):
+
+    git clone --recurse-submodules git@github.com:tristanpenman/inspect.git
+    cd inspect
+
+Inspect is built using CMake. The recommended approach is to create a build directory, and to run 'cmake' from there. For example:
 
     mkdir build
     cd build

@@ -1,15 +1,11 @@
-cmake_minimum_required (VERSION 2.6)
-project (inspect)
+cmake_minimum_required(VERSION 3.1.2)
+project(inspect)
 
 include(FindPkgConfig)
 
-# Build local gtest
-add_subdirectory(vendor/gtest-1.7.0)
-
-# Include path
 include_directories(
     src
-    vendor/gtest-1.7.0/include
+    thirdparty/googletest/include
 )
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/generated)
@@ -75,6 +71,12 @@ add_executable(inspect_tests
     test/address_test.cpp
     test/sheet_test.cpp
 )
+
+# Build local gtest
+set(gtest_force_shared_crt ON)
+option(BUILD_GMOCK FALSE)
+option(INSTALL_GTEST FALSE)
+add_subdirectory(thirdparty/googletest)
 
 target_link_libraries(inspect_tests
     gtest
