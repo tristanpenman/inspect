@@ -34,12 +34,12 @@ main := |*
 
 }%%
 
-#include "address.hpp"
+#include "address.h"
 
 #include <sstream>
 #include <stdexcept>
 
-#include "util.hpp"
+#include "util.h"
 
 %% write data;
 

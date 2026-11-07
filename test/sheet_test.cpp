@@ -26,9 +26,9 @@
 
 #include "gtest/gtest.h"
 
-#include "address.hpp"
-#include "formula.hpp"
-#include "sheet.hpp"
+#include "address.h"
+#include "formula.h"
+#include "sheet.h"
 
 class SheetTest : public testing::Test
 {

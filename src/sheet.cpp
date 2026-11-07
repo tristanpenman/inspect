@@ -1,12 +1,12 @@
-#include "sheet.hpp"
+#include "sheet.h"
 
 #include <iostream>
 #include <stdexcept>
 #include <string>
 
-#include "address.hpp"
-#include "cell.hpp"
-#include "formula.hpp"
+#include "address.h"
+#include "cell.h"
+#include "formula.h"
 
 namespace {
 

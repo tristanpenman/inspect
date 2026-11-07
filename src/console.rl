@@ -30,9 +30,9 @@ main := |*
 
 #include <iostream>
 
-#include "address.hpp"
-#include "sheet.hpp"
-#include "util.hpp"
+#include "address.h"
+#include "sheet.h"
+#include "util.h"
 
 %% write data;
 

@@ -3,8 +3,8 @@
 #include <map>
 #include <string>
 
-#include "address.hpp"
-#include "cell.hpp"
+#include "address.h"
+#include "cell.h"
 
 using Cells = std::map<Address, Cell>;
 

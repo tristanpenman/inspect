@@ -94,10 +94,10 @@ any
 #include <stdexcept>
 #include <utility>
 
-#include "ast.hpp"
-#include "formula.hpp"
+#include "ast.h"
+#include "formula.h"
 #include "parser.h"
-#include "util.hpp"
+#include "util.h"
 
 %% write data;
 

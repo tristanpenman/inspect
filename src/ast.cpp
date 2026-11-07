@@ -1,4 +1,4 @@
-#include "ast.hpp"
+#include "ast.h"
 
 #include <sstream>
 #include <utility>

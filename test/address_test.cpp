@@ -25,7 +25,7 @@
 
 #include "gtest/gtest.h"
 
-#include "address.hpp"
+#include "address.h"
 
 class AddressTest : public testing::Test
 {
