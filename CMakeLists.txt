@@ -11,19 +11,19 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
 add_custom_command(
     COMMAND ragel ${CMAKE_CURRENT_SOURCE_DIR}/src/address.rl -o ${CMAKE_CURRENT_BINARY_DIR}/generated/address.cpp
-    DEPENDS src/address.rl ${CMAKE_CURRENT_BINARY_DIR}/generated
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/address.rl
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/address.cpp
 )
 
 add_custom_command(
     COMMAND ragel ${CMAKE_CURRENT_SOURCE_DIR}/src/console.rl -o ${CMAKE_CURRENT_BINARY_DIR}/generated/console.cpp
-    DEPENDS src/console.rl ${CMAKE_CURRENT_BINARY_DIR}/generated
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/console.rl
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/console.cpp
 )
 
 add_custom_command(
     COMMAND ragel ${CMAKE_CURRENT_SOURCE_DIR}/src/formula.rl -o ${CMAKE_CURRENT_BINARY_DIR}/generated/formula.cpp
-    DEPENDS src/formula.rl ${CMAKE_CURRENT_BINARY_DIR}/generated
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/formula.rl
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/formula.cpp
 )
 
