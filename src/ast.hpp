@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -14,7 +15,7 @@ typedef std::string (*EvalFunctionCallback)(const std::string & name, const Argu
 class Node
 {
 public:
-    virtual ~Node() {};
+    virtual ~Node() = default;
     virtual std::string evaluate(EvalAddressCallback, EvalFunctionCallback, void * pData) const = 0;
     virtual operator std::string() const = 0;
 };
@@ -26,7 +27,7 @@ public:
     virtual std::string evaluate(EvalAddressCallback, EvalFunctionCallback, void * pData) const;
     virtual operator std::string() const;
 private:
-    double m_value;
+    double value_;
 };
 
 class LitStringNode : public Node
@@ -36,20 +37,19 @@ public:
     virtual std::string evaluate(EvalAddressCallback, EvalFunctionCallback, void * pData) const;
     virtual operator std::string() const;
 private:
-    std::string m_value;
+    std::string value_;
 };
 
 class BinaryOpNode: public Node
 {
 public:
-    BinaryOpNode(BinaryOp binaryOp, const Node * pLeft, const Node * pRight);
-    virtual ~BinaryOpNode();
+    BinaryOpNode(BinaryOp binaryOp, std::unique_ptr<Node> left, std::unique_ptr<Node> right);
     virtual std::string evaluate(EvalAddressCallback, EvalFunctionCallback, void * pData) const;
     virtual operator std::string() const;
 private:
-    BinaryOp m_binaryOp;
-    const Node * m_pLeft;
-    const Node * m_pRight;
+    BinaryOp binaryOp_;
+    std::unique_ptr<Node> left_;
+    std::unique_ptr<Node> right_;
 };
 
 class VarIdentifierNode: public Node
@@ -60,7 +60,7 @@ public:
     virtual std::string evaluate(EvalAddressCallback, EvalFunctionCallback, void * pData) const;
     virtual operator std::string() const;
 private:
-    std::string m_name;
+    std::string name_;
 };
 
 class VarAddressNode: public Node
@@ -71,19 +71,19 @@ public:
     virtual std::string evaluate(EvalAddressCallback, EvalFunctionCallback, void * pData) const;
     virtual operator std::string() const;
 private:
-    Address m_address;
+    Address address_;
 };
 
 class FnCallNode: public Node
 {
 public:
     virtual ~FnCallNode();
-    void setFnName(const std::string & fnName);
-    void pushParam(const Node * pNode);
+    void setFnName(const std::string& functionName);
+    void pushParam(std::unique_ptr<Node> node);
     virtual std::string evaluate(EvalAddressCallback, EvalFunctionCallback, void * pData) const;
     virtual operator std::string() const;
 private:
-    typedef std::vector<const Node *> Params;
-    Params m_params;
-    std::string m_fnName;
+    typedef std::vector<std::unique_ptr<Node>> Params;
+    Params params_;
+    std::string functionName_;
 };

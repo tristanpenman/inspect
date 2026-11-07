@@ -91,6 +91,8 @@ any
 }%%
 
 #include <stdexcept>
+#include <memory>
+#include <utility>
 
 #include "ast.hpp"
 #include "formula.hpp"
@@ -149,16 +151,19 @@ namespace
         return new VarAddressNode(Address(pIdentifierNode->getName()));
     }
 
-    Node * beginFunctionCallNode(const Node * pNode)
+    Node * beginFunctionCallNode(Node * pNode)
     {
         FnCallNode * pFnCallNode = new FnCallNode();
-        pFnCallNode->pushParam(pNode);
+        pFnCallNode->pushParam(std::unique_ptr<Node>(pNode));
         return pFnCallNode;
     }
 
-    Node * createBinaryOpNode(BinaryOp binaryOp, const Node * left, const Node * right)
+    Node * createBinaryOpNode(BinaryOp binaryOp, Node * left, Node * right)
     {
-        return new BinaryOpNode(binaryOp, left, right);
+        return new BinaryOpNode(
+            binaryOp,
+            std::unique_ptr<Node>(left),
+            std::unique_ptr<Node>(right));
     }
 
     void deleteNode(Node * pNode)
@@ -181,18 +186,18 @@ namespace
         pFnCallNode->setFnName(pIdentifierNode->getName());
     }
 
-    void extendFunctionCallNode(Node * pTargetNode, const Node * pSourceNode)
+    void extendFunctionCallNode(Node * pTargetNode, Node * pSourceNode)
     {
         FnCallNode * pFnCallNode = dynamic_cast<FnCallNode *>(pTargetNode);
         if (!pFnCallNode) {
             throw std::runtime_error("Target is not a function call node [extendFunctionCallNode].");
         }
 
-        pFnCallNode->pushParam(pSourceNode);
+        pFnCallNode->pushParam(std::unique_ptr<Node>(pSourceNode));
     }
 }
 
-Formula::Formula(const std::string & formula)
+Formula::Formula(const std::string& formula)
 {
     // Initialise the Parser and ParserData structures that will be passed
     // in to the callback functions below.
@@ -243,25 +248,31 @@ Formula::Formula(const std::string & formula)
 
     ParseFree(pParser, ::operator delete);
 
+    std::unique_ptr<Node> root(parserData.pRoot);
+    parserData.pRoot = nullptr;
+
     if (parserData.hadStackOverflow) {
-        delete parserData.pRoot;
         throw std::runtime_error("Stack overflow.");
     } else if (parserData.hadError || unmatched) {
-        delete parserData.pRoot;
         throw std::runtime_error("Invalid formula.");
-    } else if (parserData.pRoot) {
-        m_pRoot = std::shared_ptr<Node>(parserData.pRoot);
+    } else if (root) {
+        root_ = std::move(root);
     } else {
         throw std::runtime_error("Internal error.");
     }
 }
 
-std::string Formula::evaluate(EvalAddressCallback evalAddrCb, EvalFunctionCallback evalFuncCb, void *pData)
+Formula::~Formula() = default;
+
+std::string Formula::evaluate(
+    EvalAddressCallback evalAddress,
+    EvalFunctionCallback evalFunction,
+    void* data) const
 {
-    return m_pRoot->evaluate(evalAddrCb, evalFuncCb, pData);
+    return root_->evaluate(evalAddress, evalFunction, data);
 }
 
 Formula::operator std::string() const
 {
-    return *m_pRoot;
+    return *root_;
 }

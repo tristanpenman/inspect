@@ -24,21 +24,29 @@ formula ::= EQUALS expr(A).
 expr(A) ::= expr(B) PLUS expr(C).
     {
         A = pData->createBinaryOpNode(BINARY_OP_ADD, B, C);
+        B = 0;
+        C = 0;
     }
 
 expr(A) ::= expr(B) MINUS expr(C).
     {
         A = pData->createBinaryOpNode(BINARY_OP_SUBTRACT, B, C);
+        B = 0;
+        C = 0;
     }
 
 expr(A) ::= expr(B) TIMES expr(C).
     {
         A = pData->createBinaryOpNode(BINARY_OP_MULTIPLY, B, C);
+        B = 0;
+        C = 0;
     }
 
 expr(A) ::= expr(B) DIVIDE expr(C).
     {
         A = pData->createBinaryOpNode(BINARY_OP_DIVIDE, B, C);
+        B = 0;
+        C = 0;
     }
 
 expr(A) ::= LPAREN expr(B) RPAREN.
@@ -82,12 +90,14 @@ params(A) ::= params(B) COMMA expr(C).
         // to be cast to the FnCallNode* type. The FnCallNode class now owns the
         // pointer C, so we do not need to delete it.
         pData->extendFunctionCallNode(A, C);
+        C = 0;
     }
 
 params(A) ::= expr(B).
     {
         // Begin populating a new instance of the FnCallNode class
         A = pData->beginFunctionCallNode(B);
+        B = 0;
     }
 
 expr(A) ::= ADDRESS_OR_IDENTIFIER(B).

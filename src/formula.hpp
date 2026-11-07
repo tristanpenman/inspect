@@ -16,13 +16,14 @@ public:
     typedef std::string (*EvalAddressCallback)(const Address &, void * pData);
     typedef std::string (*EvalFunctionCallback)(const std::string & name, const Arguments &, void * pData);
 
-    Formula(const std::string &);
+    Formula(const std::string& formula);
+    ~Formula();
 
-    std::string evaluate(EvalAddressCallback, EvalFunctionCallback, void * pData);
+    std::string evaluate(EvalAddressCallback, EvalFunctionCallback, void* data) const;
 
     operator std::string() const;
 
 private:
 
-    std::shared_ptr<Node> m_pRoot;
+    std::unique_ptr<Node> root_;
 };

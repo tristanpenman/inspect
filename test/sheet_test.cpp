@@ -95,3 +95,10 @@ TEST_F(SheetTest, setFormula_and_getFormula_with_addresses)
     string retrievedValue = sheet.getValue(address2);
     EXPECT_EQ(expectedValue, retrievedValue);
 }
+
+TEST_F(SheetTest, formulaOwnsFunctionCallArguments)
+{
+    Formula formula("=SUM(1,2)");
+
+    EXPECT_EQ("fn{SUM}(1,2)", std::string(formula));
+}

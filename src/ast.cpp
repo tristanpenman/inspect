@@ -1,118 +1,102 @@
-#include <sstream>
-
 #include "ast.hpp"
 
+#include <sstream>
+#include <utility>
+
 namespace {
-    template<typename T>
-    std::string toString(T t) {
-        std::stringstream ss;
-        ss << t;
-        return ss.str();
-    }
+
+template<typename ValueType>
+std::string toString(ValueType value)
+{
+    std::stringstream stream;
+    stream << value;
+    return stream.str();
 }
 
-// ----------------------------------------------------------------------------
-//
-// LitDoubleNode
-//
-// ----------------------------------------------------------------------------
+}  // namespace
 
 LitDoubleNode::LitDoubleNode(double value)
-    : m_value(value)
+    : value_(value)
 {
-    // No further initialisation
 }
 
-std::string LitDoubleNode::evaluate(EvalAddressCallback evalAddrCb, EvalFunctionCallback evalFuncCb, void * pData) const
+std::string LitDoubleNode::evaluate(
+    EvalAddressCallback,
+    EvalFunctionCallback,
+    void*) const
 {
-    std::ostringstream ss;
-    ss << m_value;
-    return ss.str();
+    return toString(value_);
 }
 
 LitDoubleNode::operator std::string() const
 {
-    std::stringstream ss;
-    ss << m_value;
-    return ss.str();
+    return toString(value_);
 }
 
-// ----------------------------------------------------------------------------
-//
-// LitStringNode
-//
-// ----------------------------------------------------------------------------
-
-LitStringNode::LitStringNode(const std::string & value)
-    : m_value(value)
+LitStringNode::LitStringNode(const std::string& value)
+    : value_(value)
 {
-    // No further initialisation
 }
 
-std::string LitStringNode::evaluate(EvalAddressCallback evalAddrCb, EvalFunctionCallback evalFuncCb, void * pData) const
+std::string LitStringNode::evaluate(
+    EvalAddressCallback,
+    EvalFunctionCallback,
+    void*) const
 {
-    return m_value;
+    return value_;
 }
 
 LitStringNode::operator std::string() const
 {
-    std::stringstream ss;
-    ss << "str{" << m_value << "}";
-    return ss.str();
+    std::stringstream stream;
+    stream << "str{" << value_ << "}";
+    return stream.str();
 }
 
-// ----------------------------------------------------------------------------
-//
-// BinaryOpNode
-//
-// ----------------------------------------------------------------------------
-
-BinaryOpNode::BinaryOpNode(BinaryOp binaryOp, const Node * pLeft, const Node * pRight)
-    : m_binaryOp(binaryOp)
-    , m_pLeft(pLeft)
-    , m_pRight(pRight)
+BinaryOpNode::BinaryOpNode(
+    BinaryOp binaryOp,
+    std::unique_ptr<Node> left,
+    std::unique_ptr<Node> right)
+    : binaryOp_(binaryOp)
+    , left_(std::move(left))
+    , right_(std::move(right))
 {
-    // No further initialisation
 }
 
-BinaryOpNode::~BinaryOpNode()
+std::string BinaryOpNode::evaluate(
+    EvalAddressCallback evalAddress,
+    EvalFunctionCallback evalFunction,
+    void* data) const
 {
-    delete m_pLeft;
-    m_pLeft = 0;
-    delete m_pRight;
-    m_pRight = 0;
-}
+    const std::string valueLeft = left_->evaluate(evalAddress, evalFunction, data);
+    const std::string valueRight = right_->evaluate(evalAddress, evalFunction, data);
 
-std::string BinaryOpNode::evaluate(EvalAddressCallback evalAddrCb, EvalFunctionCallback evalFuncCb, void * pData) const {
-    const std::string valueLeft = m_pLeft->evaluate(evalAddrCb, evalFuncCb, pData);
-    const std::string valueRight = m_pRight->evaluate(evalAddrCb, evalFuncCb, pData);
-
-    std::stringstream ss(valueLeft);
-    double dLeft = 0;
-    ss >> dLeft;
-    if (!ss.fail()) {
-        ss.str("");
-        ss.clear();
-        ss << valueRight;
-        double dRight = 0;
-        ss >> dRight;
-        if (!ss.fail()) {
-            switch (m_binaryOp) {
+    std::stringstream stream(valueLeft);
+    double numberLeft = 0;
+    stream >> numberLeft;
+    if (!stream.fail()) {
+        stream.str("");
+        stream.clear();
+        stream << valueRight;
+        double numberRight = 0;
+        stream >> numberRight;
+        if (!stream.fail()) {
+            switch (binaryOp_) {
                 case BINARY_OP_ADD:
-                    return toString(dLeft + dRight);
+                    return toString(numberLeft + numberRight);
                 case BINARY_OP_SUBTRACT:
-                    return toString(dLeft - dRight);
+                    return toString(numberLeft - numberRight);
                 case BINARY_OP_MULTIPLY:
-                    return toString(dLeft * dRight);
+                    return toString(numberLeft * numberRight);
                 case BINARY_OP_DIVIDE:
-                    return toString(dLeft / dRight);
+                    return toString(numberLeft / numberRight);
             }
         }
     }
 
-    switch (m_binaryOp) {
+    switch (binaryOp_) {
         case BINARY_OP_ADD:
-            return std::string(valueLeft).append(valueRight);
+            return valueLeft + valueRight;
         default:
             break;
     }
@@ -122,124 +106,106 @@ std::string BinaryOpNode::evaluate(EvalAddressCallback evalAddrCb, EvalFunctionC
 
 BinaryOpNode::operator std::string() const
 {
-    std::stringstream ss;
-    ss << "(" << std::string(*m_pLeft);
+    std::stringstream stream;
+    stream << "(" << std::string(*left_);
 
-    switch (m_binaryOp) {
-        case BINARY_OP_ADD: ss << " + "; break;
-        case BINARY_OP_SUBTRACT: ss << " - "; break;
-        case BINARY_OP_MULTIPLY: ss << " * "; break;
-        case BINARY_OP_DIVIDE: ss << " / "; break;
-        default: ss << " ? "; break;
+    switch (binaryOp_) {
+        case BINARY_OP_ADD: stream << " + "; break;
+        case BINARY_OP_SUBTRACT: stream << " - "; break;
+        case BINARY_OP_MULTIPLY: stream << " * "; break;
+        case BINARY_OP_DIVIDE: stream << " / "; break;
+        default: stream << " ? "; break;
     }
 
-    ss << std::string(*m_pRight) << ")";
-    return ss.str();
+    stream << std::string(*right_) << ")";
+    return stream.str();
 }
 
-// ----------------------------------------------------------------------------
-//
-// VarIdentifierNode
-//
-// ----------------------------------------------------------------------------
-
-VarIdentifierNode::VarIdentifierNode(const std::string & name)
-    : m_name(name)
+VarIdentifierNode::VarIdentifierNode(const std::string& name)
+    : name_(name)
 {
-    // No further initialisation
 }
 
-const std::string & VarIdentifierNode::getName() const
+const std::string& VarIdentifierNode::getName() const
 {
-    return m_name;
+    return name_;
 }
 
-std::string VarIdentifierNode::evaluate(EvalAddressCallback evalAddrCb, EvalFunctionCallback evalFuncCb, void * pData) const
+std::string VarIdentifierNode::evaluate(
+    EvalAddressCallback,
+    EvalFunctionCallback,
+    void*) const
 {
-    return m_name;
+    return name_;
 }
 
 VarIdentifierNode::operator std::string() const
 {
-    std::stringstream ss;
-    ss << "id{" << m_name << "}";
-    return ss.str();
+    std::stringstream stream;
+    stream << "id{" << name_ << "}";
+    return stream.str();
 }
 
-// ----------------------------------------------------------------------------
-//
-// VarAddressNode
-//
-// ----------------------------------------------------------------------------
-
-VarAddressNode::VarAddressNode(const Address & address)
-    : m_address(address)
+VarAddressNode::VarAddressNode(const Address& address)
+    : address_(address)
 {
-
 }
 
 const Address& VarAddressNode::getAddress() const
 {
-    return m_address;
+    return address_;
 }
 
-std::string VarAddressNode::evaluate(EvalAddressCallback evalAddrCb, EvalFunctionCallback evalFuncCb, void * pData) const
+std::string VarAddressNode::evaluate(
+    EvalAddressCallback evalAddress,
+    EvalFunctionCallback,
+    void* data) const
 {
-    return evalAddrCb(m_address, pData);
+    return evalAddress(address_, data);
 }
 
 VarAddressNode::operator std::string() const
 {
-    std::stringstream ss;
-    ss << "addr{" << m_address.column << "," << m_address.row << "}";
-    return ss.str();
+    std::stringstream stream;
+    stream << "addr{" << address_.column << "," << address_.row << "}";
+    return stream.str();
 }
 
-// ----------------------------------------------------------------------------
-//
-// FnCallNode
-//
-// ----------------------------------------------------------------------------
-
-FnCallNode::~FnCallNode()
+void FnCallNode::setFnName(const std::string& functionName)
 {
-    for (Params::iterator itr = m_params.begin(); itr != m_params.end(); itr++) {
-        delete *itr;
-    }
-
-    m_params.clear();
+    functionName_ = functionName;
 }
 
-void FnCallNode::setFnName(const std::string & name)
+FnCallNode::~FnCallNode() = default;
+
+void FnCallNode::pushParam(std::unique_ptr<Node> node)
 {
-    m_fnName = name;
+    params_.push_back(std::move(node));
 }
 
-void FnCallNode::pushParam(const Node * pNode)
-{
-    m_params.push_back(pNode);
-}
-
-std::string FnCallNode::evaluate(EvalAddressCallback evalAddrCb, EvalFunctionCallback evalFuncCb, void * pData) const
+std::string FnCallNode::evaluate(
+    EvalAddressCallback evalAddress,
+    EvalFunctionCallback evalFunction,
+    void* data) const
 {
     Arguments arguments;
-    for (Params::const_iterator itr = m_params.begin(); itr != m_params.end(); itr++) {
-        arguments.push_back((*itr)->evaluate(evalAddrCb, evalFuncCb, pData));
+    for (const auto& param : params_) {
+        arguments.push_back(param->evaluate(evalAddress, evalFunction, data));
     }
 
-    return evalFuncCb(m_fnName, arguments, pData);
+    return evalFunction(functionName_, arguments, data);
 }
 
 FnCallNode::operator std::string() const
 {
-    std::stringstream ss;
-    ss << "fn{" << m_fnName << "}(";
-    for (Params::const_iterator itr = m_params.begin(); itr != m_params.end(); itr++) {
-        if (itr != m_params.begin()) {
-            ss << ",";
+    std::stringstream stream;
+    stream << "fn{" << functionName_ << "}(";
+    for (std::size_t index = 0; index < params_.size(); ++index) {
+        if (index > 0) {
+            stream << ",";
         }
-        ss << std::string(**itr);
+        stream << std::string(*params_[index]);
     }
-    ss << ")";
-    return ss.str();
+    stream << ")";
+    return stream.str();
 }
