@@ -9,11 +9,11 @@ main := |*
         column = 0;
         unsigned int multiplier = 1;
         const std::string s = getStr(ts, te);
-        for (std::string::const_iterator c = s.begin(); c != s.end(); c++) {
-            if (*c >= 'a' && *c <= 'z') {
-                column += (unsigned int)(*c - 'a' + 1) * multiplier;
-            } else if (*c >= 'A' && *c <= 'Z') {
-                column += (unsigned int)(*c - 'A' + 1) * multiplier;
+        for (const char c : s) {
+            if (c >= 'a' && c <= 'z') {
+                column += static_cast<unsigned int>(c - 'a' + 1) * multiplier;
+            } else if (c >= 'A' && c <= 'Z') {
+                column += static_cast<unsigned int>(c - 'A' + 1) * multiplier;
             }
             multiplier *= 26;
         }
@@ -34,11 +34,11 @@ main := |*
 
 }%%
 
+#include "address.hpp"
+
 #include <sstream>
 #include <stdexcept>
-#include <iostream>
 
-#include "address.hpp"
 #include "util.hpp"
 
 %% write data;
@@ -47,10 +47,9 @@ Address::Address(unsigned int column, unsigned int row)
     : column(column)
     , row(row)
 {
-    // No further initialisation
 }
 
-Address::Address(const std::string &address)
+Address::Address(const std::string& address)
     : column(0)
     , row(0)
 {
@@ -76,12 +75,12 @@ Address::Address(const std::string &address)
     }
 }
 
-bool operator<(const Address & lhs, const Address & rhs)
+bool operator<(const Address& lhs, const Address& rhs)
 {
     return (lhs.column < rhs.column) || (lhs.column == rhs.column && lhs.row < rhs.row);
 }
 
-bool operator==(const Address & lhs, const Address & rhs)
+bool operator==(const Address& lhs, const Address& rhs)
 {
     return (lhs.column == rhs.column && lhs.row == rhs.row);
 }
