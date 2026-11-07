@@ -1,11 +1,10 @@
 #pragma once
 
 #include <map>
-#include <memory>
 #include <string>
 
-struct Address;
-struct Cell;
+#include "address.hpp"
+#include "cell.hpp"
 
 typedef std::map<Address, Cell> Cells;
 
@@ -14,8 +13,6 @@ class Sheet
 public:
     Sheet();
 
-    ~Sheet();
-
     /**
      * Erase the formula for a Cell, identified by an address string.
      *
@@ -23,7 +20,7 @@ public:
      *
      * @returns true if the Cell was previously set, false otherwise
      */
-    bool erase(const Address &);
+    bool erase(const Address& address);
 
     /**
      * Retrieve the formula for a Cell identified by an address string, in
@@ -36,7 +33,7 @@ public:
      *
      * @returns a string containing the formula for a Cell.
      */
-    std::string getFormula(const Address &) const;
+    std::string getFormula(const Address& address) const;
 
     /**
      * Retrieve the value of a Cell, identified by an address string, in string
@@ -49,7 +46,7 @@ public:
      *
      * @returns a string containing the value of the Cell
      */
-    std::string getValue(const Address &) const;
+    std::string getValue(const Address& address) const;
 
     /**
      * Query a Cell, identified by an Address object, to see if it has been set.
@@ -81,17 +78,16 @@ public:
      *
      * @returns true if cell updated successfully, false otherwise
      */
-    bool setFormula(const Address & address, const std::string & formula);
+    bool setFormula(const Address& address, const std::string& formula);
 
 private:
 
     /// Disabled copy constructor
-    Sheet(const Sheet &);
+    Sheet(const Sheet&) = delete;
 
     /// Disabled copy assignment operator
-    Sheet & operator=(const Sheet &);
+    Sheet& operator=(const Sheet&) = delete;
 
-    std::unique_ptr<Cells> m_pCells;
-
-    int m_phase;
+    Cells cells_;
+    int phase_;
 };

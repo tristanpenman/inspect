@@ -4,13 +4,12 @@
 
 struct Cell
 {
-    Cell(const std::string & formula)
-        : formula(formula)
+    Cell(const std::string& formulaText)
+        : formula(formulaText)
         , value()
         , phase(0)
         , processed(false)
     {
-        // No further initialisation
     }
 
     // Literal cell formula
