@@ -20,12 +20,12 @@
 
 struct Node;
 
-typedef struct Node * (*AddressNodeFromIdentifierNode)(const struct Node *);
-typedef struct Node * (*BeginFunctionCallNode)(struct Node *);
-typedef struct Node * (*CreateBinaryOpNode)(enum BinaryOp, struct Node *, struct Node *);
-typedef void (*DeleteNode)(struct Node *);
-typedef void (*EndFunctionCallNode)(struct Node *, const struct Node *);
-typedef void (*ExtendFunctionCallNode)(struct Node *, struct Node *);
+typedef struct Node* (*AddressNodeFromIdentifierNode)(const struct Node*);
+typedef struct Node* (*BeginFunctionCallNode)(struct Node*);
+typedef struct Node* (*CreateBinaryOpNode)(enum BinaryOp, struct Node*, struct Node*);
+typedef void (*DeleteNode)(struct Node*);
+typedef void (*EndFunctionCallNode)(struct Node*, const struct Node*);
+typedef void (*ExtendFunctionCallNode)(struct Node*, struct Node*);
 
 struct ParserData
 {
@@ -36,7 +36,7 @@ struct ParserData
     EndFunctionCallNode endFunctionCallNode;
     ExtendFunctionCallNode extendFunctionCallNode;
 
-    struct Node * root;
+    struct Node* root;
 
     bool hadError;
     bool hadStackOverflow;

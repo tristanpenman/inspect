@@ -1,6 +1,7 @@
 #pragma once
 
-enum BinaryOp {
+enum BinaryOp
+{
     BINARY_OP_ADD,
     BINARY_OP_SUBTRACT,
     BINARY_OP_MULTIPLY,

@@ -6,7 +6,7 @@
 #include "address.hpp"
 #include "cell.hpp"
 
-typedef std::map<Address, Cell> Cells;
+using Cells = std::map<Address, Cell>;
 
 class Sheet
 {
@@ -55,7 +55,7 @@ public:
      *
      * @returns true if the Cell has been set, false otherwise.
      */
-    bool isSet(const Address & address) const;
+    bool isSet(const Address& address) const;
 
     /**
      * Print values of all cells
@@ -81,11 +81,8 @@ public:
     bool setFormula(const Address& address, const std::string& formula);
 
 private:
-
-    /// Disabled copy constructor
     Sheet(const Sheet&) = delete;
 
-    /// Disabled copy assignment operator
     Sheet& operator=(const Sheet&) = delete;
 
     Cells cells_;

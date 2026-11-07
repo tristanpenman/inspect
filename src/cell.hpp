@@ -6,9 +6,6 @@ struct Cell
 {
     Cell(const std::string& formulaText)
         : formula(formulaText)
-        , value()
-        , phase(0)
-        , processed(false)
     {
     }
 
@@ -22,8 +19,8 @@ struct Cell
     // the same as that for the parent Sheet instance, then the cell has been visited by the
     // current re-calculation pass. If it has the opposite sign, then the cell was last visited in
     // the previous re-calculation pass.
-    int phase;
+    int phase = 0;
 
     // Flag to track whether the cell has been processed in the current recalculation pass
-    bool processed;
+    bool processed = false;
 };

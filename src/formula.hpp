@@ -30,6 +30,5 @@ public:
     operator std::string() const;
 
 private:
-
     std::unique_ptr<Node> root_;
 };

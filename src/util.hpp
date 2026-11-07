@@ -2,7 +2,7 @@
 
 #include <string>
 
-inline std::string getStr(const char * beg, const char * end)
+inline std::string getStr(const char* begin, const char* end)
 {
-    return std::string(beg).substr(0, end-beg);
+    return std::string(begin).substr(0, end - begin);
 }
