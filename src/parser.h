@@ -36,7 +36,7 @@ struct ParserData
     EndFunctionCallNode endFunctionCallNode;
     ExtendFunctionCallNode extendFunctionCallNode;
 
-    struct Node * pRoot;
+    struct Node * root;
 
     bool hadError;
     bool hadStackOverflow;

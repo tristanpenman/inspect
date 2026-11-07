@@ -6,14 +6,14 @@ main := |*
 
 ('-'?[0-9]+('.'[0-9]+)?)
     {
-        cbToken(LITERAL, new LitDoubleNode(atof(getStr(ts, te).c_str())), pData);
+        cbToken(LITERAL, new LitDoubleNode(atof(getStr(ts, te).c_str())), callbackData);
     };
 
 ("'"[^']*"'") | ('"'[^"]*'"')
     {
         // String literals appear between a pair of ' or " characters. The
         // delimiters are not passed along with the string.
-        cbToken(LITERAL, new LitStringNode(getStr(ts+1, te-1)), pData);
+        cbToken(LITERAL, new LitStringNode(getStr(ts+1, te-1)), callbackData);
     };
 
 ([A-Za-z]+[0-9]+)
@@ -21,7 +21,7 @@ main := |*
         // When an identifier looks like it could be address, it is passed to
         // parser using the ADDRESS_OR_IDENTIFIER token. The parser can
         // determine how to treat the token based on its context.
-        cbToken(ADDRESS_OR_IDENTIFIER, new VarIdentifierNode(getStr(ts, te)), pData);
+        cbToken(ADDRESS_OR_IDENTIFIER, new VarIdentifierNode(getStr(ts, te)), callbackData);
     };
 
 ([A-Za-z][0-9a-zA-Z_]*)
@@ -30,7 +30,7 @@ main := |*
         // identifiers may contain underscores, and do not need to contain
         // numbers. Currently, identifiers may only be used for function
         // names.
-        cbToken(IDENTIFIER, new VarIdentifierNode(getStr(ts, te)), pData);
+        cbToken(IDENTIFIER, new VarIdentifierNode(getStr(ts, te)), callbackData);
     };
 
 ("'" any*)
@@ -38,42 +38,42 @@ main := |*
         // A formula that begins with an apostrophe should be interpreted
         // as a literal string. This is shorthand that allows numbers to
         // be entered as a text value.
-        cbToken(LITERAL, new LitStringNode(getStr(ts + 1, te)), pData);
+        cbToken(LITERAL, new LitStringNode(getStr(ts + 1, te)), callbackData);
     };
 
 ','
     {
-        cbToken(COMMA, NULL, pData);
+        cbToken(COMMA, NULL, callbackData);
     };
 
 '='
     {
-        cbToken(EQUALS, NULL, pData);
+        cbToken(EQUALS, NULL, callbackData);
     };
 
 ('+')
     {
-        cbToken(PLUS, NULL, pData);
+        cbToken(PLUS, NULL, callbackData);
     };
 
 ('-')
     {
-        cbToken(MINUS, NULL, pData);
+        cbToken(MINUS, NULL, callbackData);
     };
 
 ('*')
     {
-        cbToken(TIMES, NULL, pData);
+        cbToken(TIMES, NULL, callbackData);
     };
 
 "("
     {
-        cbToken(LPAREN, NULL, pData);
+        cbToken(LPAREN, NULL, callbackData);
     };
 
 ")"
     {
-        cbToken(RPAREN, NULL, pData);
+        cbToken(RPAREN, NULL, callbackData);
     };
 
 space
@@ -90,8 +90,8 @@ any
 
 }%%
 
-#include <stdexcept>
 #include <memory>
+#include <stdexcept>
 #include <utility>
 
 #include "ast.hpp"
@@ -124,41 +124,41 @@ namespace
 {
     struct CallbackData
     {
-        void * pParser;
-        ParserData * pParserData;
+        void* parser;
+        ParserData* parserData;
     };
 
-    typedef void (*CallbackToken)(int kind, Node * pNode, CallbackData * pData);
-    typedef void (*CallbackEnd)(CallbackData * pData);
+    typedef void (*CallbackToken)(int kind, Node* node, CallbackData* data);
+    typedef void (*CallbackEnd)(CallbackData* data);
 
-    void cbToken(int kind, Node * pNode, CallbackData * pData)
+    void cbToken(int kind, Node* node, CallbackData* data)
     {
-        Parse(pData->pParser, kind, pNode, pData->pParserData);
+        Parse(data->parser, kind, node, data->parserData);
     }
 
-    void cbEnd(CallbackData * pData)
+    void cbEnd(CallbackData* data)
     {
-        Parse(pData->pParser, 0, 0, pData->pParserData);
+        Parse(data->parser, 0, 0, data->parserData);
     }
 
-    Node * addressNodeFromIdentifierNode(const Node * pNode)
+    Node* addressNodeFromIdentifierNode(const Node* node)
     {
-        const VarIdentifierNode * pIdentifierNode = dynamic_cast<const VarIdentifierNode *>(pNode);
-        if (!pIdentifierNode) {
+        const VarIdentifierNode* identifierNode = dynamic_cast<const VarIdentifierNode*>(node);
+        if (!identifierNode) {
             throw std::runtime_error("Source is not an identifier node.");
         }
 
-        return new VarAddressNode(Address(pIdentifierNode->getName()));
+        return new VarAddressNode(Address(identifierNode->getName()));
     }
 
-    Node * beginFunctionCallNode(Node * pNode)
+    Node* beginFunctionCallNode(Node* node)
     {
-        FnCallNode * pFnCallNode = new FnCallNode();
-        pFnCallNode->pushParam(std::unique_ptr<Node>(pNode));
-        return pFnCallNode;
+        FnCallNode* functionCall = new FnCallNode();
+        functionCall->pushParam(std::unique_ptr<Node>(node));
+        return functionCall;
     }
 
-    Node * createBinaryOpNode(BinaryOp binaryOp, Node * left, Node * right)
+    Node* createBinaryOpNode(BinaryOp binaryOp, Node* left, Node* right)
     {
         return new BinaryOpNode(
             binaryOp,
@@ -166,34 +166,34 @@ namespace
             std::unique_ptr<Node>(right));
     }
 
-    void deleteNode(Node * pNode)
+    void deleteNode(Node* node)
     {
-        delete pNode;
+        delete node;
     }
 
-    void endFunctionCallNode(Node * pTargetNode, const Node * pSourceNode)
+    void endFunctionCallNode(Node* targetNode, const Node* sourceNode)
     {
-        const VarIdentifierNode * pIdentifierNode = dynamic_cast<const VarIdentifierNode *>(pSourceNode);
-        if (!pIdentifierNode) {
+        const VarIdentifierNode* identifierNode = dynamic_cast<const VarIdentifierNode*>(sourceNode);
+        if (!identifierNode) {
             throw std::runtime_error("Source is not an identifier node [endFunctionCallNode].");
         }
 
-        FnCallNode * pFnCallNode = dynamic_cast<FnCallNode *>(pTargetNode);
-        if (!pFnCallNode) {
+        FnCallNode* functionCall = dynamic_cast<FnCallNode*>(targetNode);
+        if (!functionCall) {
             throw std::runtime_error("Target is not a function call node [endFunctionCallNode].");
         }
 
-        pFnCallNode->setFnName(pIdentifierNode->getName());
+        functionCall->setFnName(identifierNode->getName());
     }
 
-    void extendFunctionCallNode(Node * pTargetNode, Node * pSourceNode)
+    void extendFunctionCallNode(Node* targetNode, Node* sourceNode)
     {
-        FnCallNode * pFnCallNode = dynamic_cast<FnCallNode *>(pTargetNode);
-        if (!pFnCallNode) {
+        FnCallNode* functionCall = dynamic_cast<FnCallNode*>(targetNode);
+        if (!functionCall) {
             throw std::runtime_error("Target is not a function call node [extendFunctionCallNode].");
         }
 
-        pFnCallNode->pushParam(std::unique_ptr<Node>(pSourceNode));
+        functionCall->pushParam(std::unique_ptr<Node>(sourceNode));
     }
 }
 
@@ -201,7 +201,7 @@ Formula::Formula(const std::string& formula)
 {
     // Initialise the Parser and ParserData structures that will be passed
     // in to the callback functions below.
-    void * pParser = ParseAlloc(::operator new);
+    void* parser = ParseAlloc(::operator new);
 
     ParserData parserData = {
         addressNodeFromIdentifierNode,
@@ -216,11 +216,11 @@ Formula::Formula(const std::string& formula)
     };
 
     CallbackData data = {
-        pParser,
+        parser,
         &parserData
     };
 
-    CallbackData *pData = &data;
+    CallbackData* callbackData = &data;
 
     // Begin tokenising the formula string. As tokens are identified, they
     // will be passed to the Parser via the CallbackToken function. Once all
@@ -244,12 +244,12 @@ Formula::Formula(const std::string& formula)
     // Embed lexical analyzer
     %% write exec;
 
-    cbEnd(pData);
+    cbEnd(callbackData);
 
-    ParseFree(pParser, ::operator delete);
+    ParseFree(parser, ::operator delete);
 
-    std::unique_ptr<Node> root(parserData.pRoot);
-    parserData.pRoot = nullptr;
+    std::unique_ptr<Node> root(parserData.root);
+    parserData.root = nullptr;
 
     if (parserData.hadStackOverflow) {
         throw std::runtime_error("Stack overflow.");

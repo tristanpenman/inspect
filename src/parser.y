@@ -13,12 +13,12 @@
 
 formula ::= LITERAL(A).
     {
-        pData->pRoot = A;
+        pData->root = A;
     }
 
 formula ::= EQUALS expr(A).
     {
-        pData->pRoot = A;
+        pData->root = A;
     }
 
 expr(A) ::= expr(B) PLUS expr(C).

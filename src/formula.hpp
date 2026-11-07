@@ -11,15 +11,21 @@ class Node;
 class Formula
 {
 public:
-    typedef std::vector<std::string> Arguments;
+    using Arguments = std::vector<std::string>;
 
-    typedef std::string (*EvalAddressCallback)(const Address &, void * pData);
-    typedef std::string (*EvalFunctionCallback)(const std::string & name, const Arguments &, void * pData);
+    using EvalAddressCallback = std::string (*)(const Address&, void* data);
+    using EvalFunctionCallback = std::string (*)(
+        const std::string& name,
+        const Arguments& arguments,
+        void* data);
 
     Formula(const std::string& formula);
     ~Formula();
 
-    std::string evaluate(EvalAddressCallback, EvalFunctionCallback, void* data) const;
+    std::string evaluate(
+        EvalAddressCallback evalAddress,
+        EvalFunctionCallback evalFunction,
+        void* data) const;
 
     operator std::string() const;
 
