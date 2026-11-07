@@ -1,12 +1,11 @@
-cmake_minimum_required(VERSION 3.1.2)
-project(inspect)
+cmake_minimum_required(VERSION 3.16)
+project(inspect LANGUAGES C CXX)
 
-include(FindPkgConfig)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-include_directories(
-    src
-    thirdparty/googletest/include
-)
+include(CTest)
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
@@ -28,26 +27,10 @@ add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/formula.cpp
 )
 
-# Copy parser.y to build directory
-add_custom_command(
-    COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/src/parser.y ${CMAKE_CURRENT_BINARY_DIR}/generated/parser.y
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/parser.y ${CMAKE_CURRENT_BINARY_DIR}/generated
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/parser.y
-)
-
-# Copy parser.h to build directory
-add_custom_command(
-    COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/src/parser.h ${CMAKE_CURRENT_BINARY_DIR}/generated/parser.h
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/parser.h ${CMAKE_CURRENT_BINARY_DIR}/generated
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/parser.h
-)
-
-# Copy lempar.c template into build directory
-add_custom_command(
-    COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/etc/lempar.c ${CMAKE_CURRENT_BINARY_DIR}/generated/lempar.c
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/etc/lempar.c
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/lempar.c
-)
+# Copy parser inputs into the build tree using CMake's portable file handling.
+configure_file(src/parser.y generated/parser.y COPYONLY)
+configure_file(src/parser.h generated/parser.h COPYONLY)
+configure_file(etc/lempar.c generated/lempar.c COPYONLY)
 
 # Generate a parser from parser.y
 add_custom_command(
@@ -66,23 +49,29 @@ add_library(inspect
     src/sheet.cpp
 )
 
-# Unit tests executable
-add_executable(inspect_tests
-    test/address_test.cpp
-    test/sheet_test.cpp
-)
-
 # Build local gtest
 set(gtest_force_shared_crt ON)
-option(BUILD_GMOCK FALSE)
-option(INSTALL_GTEST FALSE)
+set(BUILD_GMOCK OFF CACHE BOOL "Build GoogleMock" FORCE)
+set(INSTALL_GTEST OFF CACHE BOOL "Install GoogleTest" FORCE)
 add_subdirectory(thirdparty/googletest)
 
-target_link_libraries(inspect_tests
-    gtest
-    gtest_main
-    inspect
+target_include_directories(inspect
+    PUBLIC src
+    PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated
 )
+
+if(BUILD_TESTING)
+    add_executable(inspect_tests
+        test/address_test.cpp
+        test/sheet_test.cpp
+    )
+
+    target_link_libraries(inspect_tests
+        PRIVATE gtest gtest_main inspect
+    )
+
+    add_test(NAME inspect_tests COMMAND inspect_tests)
+endif()
 
 add_executable(inspect_console
     ${CMAKE_CURRENT_BINARY_DIR}/generated/console.cpp
