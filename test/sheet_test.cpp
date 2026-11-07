@@ -22,7 +22,7 @@
  */
 
 #include <map>
-#include <iostream>
+#include <string>
 
 #include "gtest/gtest.h"
 
@@ -30,46 +30,42 @@
 #include "formula.hpp"
 #include "sheet.hpp"
 
-using namespace std;
-
 class SheetTest : public testing::Test
 {
-
 };
 
-TEST_F(SheetTest, setFormula_and_getFormula_basic)
+TEST_F(SheetTest, setFormulaAndGetFormulaBasic)
 {
     Sheet sheet;
     Address address("A1");
     EXPECT_EQ(1, address.column);
     EXPECT_EQ(1, address.row);
 
-    typedef map<string, string> Formulas;
+    const std::map<std::string, std::string> formulas = {
+        {"=1+1", "2"},
+        {"=1.5 + 1", "2.5"},
+        {"=1 + 1.5", "2.5"},
+        {"=\"Hello\"+\" \"+\"World\"", "Hello World"},
+        {"=\"Hello\"+3.25", "Hello3.25"},
+        {"=3.25+\"Hello\"", "3.25Hello"}
+    };
 
-    Formulas formulas;
-    formulas["=1+1"] = "2";
-    formulas["=1.5 + 1"] = "2.5";
-    formulas["=1 + 1.5"] = "2.5";
-    formulas["=\"Hello\"+\" \"+\"World\""] = "Hello World";
-    formulas["=\"Hello\"+3.25"] = "Hello3.25";
-    formulas["=3.25+\"Hello\""] = "3.25Hello";
-
-    for (Formulas::const_iterator itr = formulas.begin(); itr != formulas.end(); itr++) {
-        const string & expectedFormula = itr->first;
+    for (const auto& formula : formulas) {
+        const std::string& expectedFormula = formula.first;
         EXPECT_TRUE(sheet.setFormula(address, expectedFormula));
 
-        string retrievedFormula = sheet.getFormula(address);
+        const std::string retrievedFormula = sheet.getFormula(address);
         EXPECT_EQ(expectedFormula, retrievedFormula);
 
         sheet.recalculate();
 
-        const string & expectedValue = itr->second;
-        string retrievedValue = sheet.getValue(address);
+        const std::string& expectedValue = formula.second;
+        const std::string retrievedValue = sheet.getValue(address);
         EXPECT_EQ(expectedValue, retrievedValue);
     }
 }
 
-TEST_F(SheetTest, setFormula_and_getFormula_with_addresses)
+TEST_F(SheetTest, setFormulaAndGetFormulaWithAddresses)
 {
     Sheet sheet;
 
@@ -82,17 +78,17 @@ TEST_F(SheetTest, setFormula_and_getFormula_with_addresses)
     EXPECT_EQ(2, address2.row);
 
     // Set formula for A1 with no references
-    const string formula1 = "=1+12.5";
+    const std::string formula1 = "=1+12.5";
     EXPECT_TRUE(sheet.setFormula(address1, formula1));
 
     // Set formula for B2 so that it references A1
-    const string formula2 = "=A1+12";
+    const std::string formula2 = "=A1+12";
     EXPECT_TRUE(sheet.setFormula(address2, formula2));
 
     sheet.recalculate();
 
-    const string & expectedValue = "25.5";
-    string retrievedValue = sheet.getValue(address2);
+    const std::string expectedValue = "25.5";
+    const std::string retrievedValue = sheet.getValue(address2);
     EXPECT_EQ(expectedValue, retrievedValue);
 }
 

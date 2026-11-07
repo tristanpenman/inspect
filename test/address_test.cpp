@@ -23,13 +23,12 @@
 
 #include <stdexcept>
 
-#include "address.hpp"
-
 #include "gtest/gtest.h"
+
+#include "address.hpp"
 
 class AddressTest : public testing::Test
 {
-
 };
 
 TEST_F(AddressTest, constructionFromColumnAndRow)
