@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [clang, gcc]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ragel lemon
+
+      - name: Configure, build, and test
+        env:
+          CC: ${{ matrix.compiler }}
+        run: |
+          mkdir -p build
+          cd build
+          cmake ..
+          make
+          ./inspect_tests
