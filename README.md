@@ -1,8 +1,6 @@
 # Inspect
 
-## Overview
-
-Inspect is a _very_ simple spreadsheet application.
+Inspect is a _very_ simple spreadsheet formula parser.
 
 This project is essentially experimental code - I wrote it while learning how to use Ragel and Lemon to build a parser. The build system was hacked together pretty quickly so that it would work on Mac. It should compile cleanly on Linux systems, but I have not tested this recently.
 
@@ -21,7 +19,7 @@ Third-party libraries:
 
 Clone the repo, including submodules (googletest):
 
-    git clone --recurse-submodules git@github.com:tristanpenman/inspect.git
+    git clone git@github.com:tristanpenman/inspect.git
     cd inspect
 
 Inspect is built using CMake. The recommended approach is to create a build directory, and to run 'cmake' from there. For example:
