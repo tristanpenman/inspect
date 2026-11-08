@@ -1,11 +1,29 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.31)
 project(inspect LANGUAGES C CXX)
 
+# Force out-of-source builds
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+
+# C++11 is required
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Avoid language extensions to ensure consistent behavior across compilers
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-include(CTest)
+# FetchContent: Easier than Git submodules
+include(FetchContent)
+
+# Default to Debug for single-config generators if user didn't specify anything
+get_property(isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(NOT isMultiConfig AND NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
+endif()
+
+# ----------------------------------------------------------------------------
+# Generated sources
+# ----------------------------------------------------------------------------
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
@@ -40,7 +58,10 @@ add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/parser.c
 )
 
+# ----------------------------------------------------------------------------
 # Inspect library
+# ----------------------------------------------------------------------------
+
 add_library(inspect
     ${CMAKE_CURRENT_BINARY_DIR}/generated/address.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/generated/formula.cpp
@@ -49,34 +70,49 @@ add_library(inspect
     src/sheet.cpp
 )
 
-# Build local gtest
-set(gtest_force_shared_crt ON)
-set(BUILD_GMOCK OFF CACHE BOOL "Build GoogleMock" FORCE)
-set(INSTALL_GTEST OFF CACHE BOOL "Install GoogleTest" FORCE)
-add_subdirectory(thirdparty/googletest)
-
-target_include_directories(inspect
-    PUBLIC src
+target_include_directories(inspect PUBLIC
+    src
     PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated
 )
 
-if(BUILD_TESTING)
-    add_executable(inspect_tests
-        test/address_test.cpp
-        test/sheet_test.cpp
-    )
-
-    target_link_libraries(inspect_tests
-        PRIVATE gtest gtest_main inspect
-    )
-
-    add_test(NAME inspect_tests COMMAND inspect_tests)
-endif()
+# ----------------------------------------------------------------------------
+# Console executable
+# ----------------------------------------------------------------------------
 
 add_executable(inspect_console
     ${CMAKE_CURRENT_BINARY_DIR}/generated/console.cpp
 )
 
-target_link_libraries(inspect_console
-    inspect
-)
+target_link_libraries(inspect_console PRIVATE inspect)
+
+# ----------------------------------------------------------------------------
+# Tests
+# ----------------------------------------------------------------------------
+
+include(CTest)
+if(BUILD_TESTING)
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
+    set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+
+    FetchContent_Declare(googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG v1.17.0
+    )
+    FetchContent_MakeAvailable(googletest)
+
+    add_executable(inspect_tests
+        test/address_test.cpp
+        test/sheet_test.cpp
+    )
+
+    target_link_libraries(inspect_tests PRIVATE
+        GTest::gtest_main
+        inspect
+    )
+
+    add_test(NAME inspect_tests COMMAND inspect_tests)
+endif()
+
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "Generator: ${CMAKE_GENERATOR} (multi-config: ${isMultiConfig})")
